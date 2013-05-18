@@ -31,3 +31,4 @@ proguard/
 lint.xml
 
 .DS_Store
+Thumbs.db

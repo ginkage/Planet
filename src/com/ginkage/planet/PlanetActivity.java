@@ -13,7 +13,7 @@ import android.view.VelocityTracker;
 public class PlanetActivity extends Activity
 {
 	private PlanetSurfaceView mGLView = null;
-	private Handler mHandler = new Handler();
+	private final Handler mHandler = new Handler();
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -43,7 +43,7 @@ public class PlanetActivity extends Activity
 		mHandler.postDelayed(mUpdateTimeTask, 1000);
 	}
 
-	private Runnable mUpdateTimeTask = new Runnable() {
+	private final Runnable mUpdateTimeTask = new Runnable() {
 		public void run() {
 			if (mGLView != null) {
 				if (mGLView.mRenderer != null) {
@@ -79,7 +79,7 @@ class PlanetSurfaceView extends GLSurfaceView
 		velocityTracker = VelocityTracker.obtain();
 	}
 
-	public class MyGestureListener extends SimpleOnScaleGestureListener
+	private class MyGestureListener extends SimpleOnScaleGestureListener
 	{
 		@Override
 		public boolean onScale(ScaleGestureDetector detector) {

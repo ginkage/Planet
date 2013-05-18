@@ -109,9 +109,7 @@ public class PlanetRenderer implements Renderer {
 	private int planetTex;
 	private int offsetTex;
 
-	private final int texSize = 1024;
-
-	int[] genbuf = new int[1];
+    private final int[] genbuf = new int[1];
 
 	public float fps = 0;
 	private long start_frame;
@@ -127,7 +125,7 @@ public class PlanetRenderer implements Renderer {
 	public double rotateSpeed = 0.125f;
 	public double tiltSpeed = 0;
 
-	Context mContext;
+	private final Context mContext;
 
 	public PlanetRenderer(Context context)
 	{
@@ -243,7 +241,7 @@ public class PlanetRenderer implements Renderer {
 		return prog;
 	}
 
-	public int loadTexture(final Context context, final int resourceId)
+	int loadTexture(final Context context, final int resourceId)
 	{
 		GLES20.glGenTextures(1, genbuf, 0);
 		if (genbuf[0] != 0)
@@ -273,7 +271,8 @@ public class PlanetRenderer implements Renderer {
 
 	private void initPlanet()
 	{
-		int width = texSize, height = texSize;
+        int texSize = 1024;
+        int width = texSize, height = texSize;
 		double d = texSize, r = d * 0.5;
 		double u, v;
 		long aa, uu, vv;
