@@ -1,13 +1,5 @@
 package com.ginkage.planet;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -16,6 +8,13 @@ import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.GLUtils;
 import android.os.SystemClock;
 import android.util.Log;
+
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 public class PlanetRenderer implements Renderer {
 	private final String quadVS =
@@ -30,25 +29,37 @@ public class PlanetRenderer implements Renderer {
 		"}\n";
 /*
 	private final String quadFS =
-			"precision mediump float;\n" +
-			"uniform sampler2D uTexture0;\n" +
-			"uniform sampler2D uTexture1;\n" +
-			"uniform float uOffset;\n" +
-			"uniform vec2 uTilt;\n" +
-			"varying vec4 TexCoord0;\n" +
-			"void main() {\n" +
-			"	vec4 vTex = texture2D(uTexture0, TexCoord0.xy);\n" +
-			"	vec3 vOff = vTex.xyz * 255.0;\n" +
+        "precision mediump float;\n" +
+        "uniform sampler2D uTexture0;\n" +
+        "uniform sampler2D uTexture1;\n" +
+        "uniform float uOffset;\n" +
+        "varying vec4 TexCoord0;\n" +
+        "void main() {\n" +
+        "	vec4 vTex = texture2D(uTexture0, TexCoord0.xy);\n" +
+        "	vTex.x += uOffset;\n" +
+        "	vec3 vCol = texture2D(uTexture1, vTex.xy).rgb;\n" +
+        "  	gl_FragColor = vec4(vCol * vTex.w, (vTex.w > 0.0 ? 1.0 : 0.0));\n" +
+        "}\n";
 
-			"	float hiY = floor(vOff.y / 16.0);\n" +
-			"	float loY = vOff.y - 16.0 * hiY;\n" +
+	private final String quadFS =
+        "precision mediump float;\n" +
+        "uniform sampler2D uTexture0;\n" +
+        "uniform sampler2D uTexture1;\n" +
+        "uniform float uOffset;\n" +
+        "varying vec4 TexCoord0;\n" +
+        "void main() {\n" +
+        "	vec4 vTex = texture2D(uTexture0, TexCoord0.xy);\n" +
 
-			"	vec2 vCoord = vec2(\n" +
-			"		(vOff.z * 16.0 + hiY) * 0.5 / 4095.0 + uOffset,\n" +
-			"		(256.0 * loY + vOff.x) / 4095.0);\n" +
+        "	vec3 vOff = vTex.xyz * 255.0;\n" +
+        "	float hiY = floor(vOff.y / 16.0);\n" +
+        "	float loY = vOff.y - 16.0 * hiY;\n" +
+        "	vec2 vCoord = vec2(\n" +
+        "		(256.0 * loY + vOff.x) / 4095.0 + uOffset,\n" +
+        "		(vOff.z * 16.0 + hiY) / 4095.0);\n" +
 
-			"  	gl_FragColor = vec4(texture2D(uTexture1, vCoord).rgb * vTex.w, (vTex.w > 0.0 ? 1.0 : 0.0));\n" +
-			"}\n";
+        "	vec3 vCol = texture2D(uTexture1, vCoord).rgb;\n" +
+        "  	gl_FragColor = vec4(vCol * vTex.w, (vTex.w > 0.0 ? 1.0 : 0.0));\n" +
+        "}\n";
 */
 	private final String quadFS =
 		"precision mediump float;\n" +
@@ -57,54 +68,48 @@ public class PlanetRenderer implements Renderer {
 		"uniform float uOffset;\n" +
 		"uniform vec2 uTilt;\n" +
 		"varying vec4 TexCoord0;\n" +
-//		"const float PI = 3.14159265358;\n" +
 		"void main() {\n" +
-		"	float sx = TexCoord0.x;\n" +
-		"	float sy = TexCoord0.y;\n" +
+		"	float sx = 2.0 * TexCoord0.x - 1.0;\n" +
+		"	float sy = 2.0 * TexCoord0.y - 1.0;\n" +
 		"	float z2 = 1.0 - sx * sx - sy * sy;\n" +
 
 		"	if (z2 > 0.0) {;\n" +
 		"		float sz = sqrt(z2);\n" +
-		"		float x = (sx - 1.0) * 0.5;\n" +
-		"		float y = (1.0 + sy * uTilt.y - sz * uTilt.x) * 0.5;\n" +
+		"		float y = (sy * uTilt.y - sz * uTilt.x + 1.0) * 0.5;\n" +
 		"		float z = (sy * uTilt.x + sz * uTilt.y);\n" +
 
-		"		vec4 vTex = texture2D(uTexture0, vec2(x, y));\n" +
+		"		vec4 vTex = texture2D(uTexture0, vec2(TexCoord0.x, y));\n" +
 		"		vec3 vOff = vTex.xyz * 255.0;\n" +
 
 		"		float hiY = floor(vOff.y / 16.0);\n" +
 		"		float loY = vOff.y - 16.0 * hiY;\n" +
 
 		"		vec2 vCoord = vec2(\n" +
-		"			(vOff.z * 16.0 + hiY) * 0.5 / 4095.0,\n" +
-		"			(256.0 * loY + vOff.x) / 4095.0);\n" +
-
-//		"		vec2 vCoord;\n" +
-//		"		float sina = 2.0 * y - 1.0;\n" +
-//		"		vCoord.y = asin(sina) / PI + 0.5;\n" +
-//		"		vCoord.x = (1.0 - acos(sx / sqrt(1.0 - sina * sina)) / PI) * 0.5;\n" +
+		"			(256.0 * loY + vOff.x) / 4095.0,\n" +
+		"			(vOff.z * 16.0 + hiY) / 4095.0);\n" +
 
 		"		if (z < 0.0) { vCoord.x = 1.0 - vCoord.x; }\n" +
 		"		vCoord.x += uOffset;\n" +
 
-		"   	gl_FragColor = vec4(texture2D(uTexture1, vCoord).rgb * sz, 1.0);\n" +
+        "		vec3 vCol = texture2D(uTexture1, vCoord).rgb;\n" +
+		"   	gl_FragColor = vec4(vCol * sz, 1.0);\n" +
 		"	} else {\n" +
 		"   	gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);\n" +
 		"	}\n" +
 		"}\n";
 
-	private int mQProgram;
-	private int maQPosition;
-	private int maQTexCoord;
-	private int muQRatio;
-	private int muQTexture0;
-	private int muQTexture1;
-	private int muQOffset;
-	private int muQTilt;
+	private int quadProgram;
+	private int qvPosition;
+	private int qvTexCoord0;
+	private int quRatio;
+	private int quTexture0;
+	private int quTexture1;
+	private int quOffset;
+	private int quTilt;
 
 	float ratioX, ratioY;
 
-	private int glQuadVB;
+	private int quadVB;
 
 	private int planetTex;
 	private int offsetTex;
@@ -145,12 +150,15 @@ public class PlanetRenderer implements Renderer {
 		}
 
 		if (prevTime < 0) prevTime = curTime;
-		rotateAngle += (curTime - prevTime) * rotateSpeed / 1000.0f;
+        double delta = (curTime - prevTime) / 1000.0f;
+        prevTime = curTime;
+
+		rotateAngle += delta * rotateSpeed;
 		rotateAngle -= Math.floor(rotateAngle);
-		tiltAngle += (curTime - prevTime) * tiltSpeed / 1000.0f;
+
+		tiltAngle += delta * tiltSpeed;
 		while (tiltAngle > 2) tiltAngle -= 2;
 		while (tiltAngle < 0) tiltAngle += 2;
-		prevTime = curTime;
 
 		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 		
@@ -162,33 +170,33 @@ public class PlanetRenderer implements Renderer {
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, planetTex);
 
-		GLES20.glUseProgram(mQProgram);
+		GLES20.glUseProgram(quadProgram);
 		GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
-		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, glQuadVB);
-		GLES20.glEnableVertexAttribArray(maQPosition);
-		GLES20.glVertexAttribPointer(maQPosition, 3, GLES20.GL_FLOAT, false, 20, 0);
-		GLES20.glEnableVertexAttribArray(maQTexCoord);
-		GLES20.glVertexAttribPointer(maQTexCoord, 2, GLES20.GL_FLOAT, false, 20, 12);
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, quadVB);
+		GLES20.glEnableVertexAttribArray(qvPosition);
+		GLES20.glVertexAttribPointer(qvPosition, 3, GLES20.GL_FLOAT, false, 20, 0);
+		GLES20.glEnableVertexAttribArray(qvTexCoord0);
+		GLES20.glVertexAttribPointer(qvTexCoord0, 2, GLES20.GL_FLOAT, false, 20, 12);
 		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
 
-		GLES20.glUniform1i(muQTexture0, 0);
-		GLES20.glUniform1i(muQTexture1, 1);
-		GLES20.glUniform1f(muQOffset, rotateAngle);
+		GLES20.glUniform1i(quTexture0, 0);
+		GLES20.glUniform1i(quTexture1, 1);
+		GLES20.glUniform1f(quOffset, rotateAngle);
 		
 		double ta = tiltAngle * Math.PI;
-		GLES20.glUniform2f(muQTilt, (float) Math.sin(ta), (float) Math.cos(ta));
+		GLES20.glUniform2f(quTilt, (float) Math.sin(ta), (float) Math.cos(ta));
 
 		float minScale = 0.5f, maxScale = 2.0f / (ratioX < ratioY ? ratioX : ratioY);
 		if (scaleFactor < minScale) scaleFactor = minScale;
 		if (scaleFactor > maxScale) scaleFactor = maxScale;
 
-		GLES20.glUniform4f(muQRatio, ratioX * scaleFactor, ratioY * scaleFactor, 1, 1);
+		GLES20.glUniform4f(quRatio, ratioX * scaleFactor, ratioY * scaleFactor, 1, 1);
 
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
-		GLES20.glDisableVertexAttribArray(maQPosition);
-		GLES20.glDisableVertexAttribArray(maQTexCoord);
+		GLES20.glDisableVertexAttribArray(qvPosition);
+		GLES20.glDisableVertexAttribArray(qvTexCoord0);
 
 		GLES20.glDisable(GLES20.GL_BLEND);
 
@@ -233,10 +241,10 @@ public class PlanetRenderer implements Renderer {
 		int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vs);
 		int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fs);
 
-		int prog = GLES20.glCreateProgram();			 // create empty OpenGL Program
-		GLES20.glAttachShader(prog, vertexShader);   // add the vertex shader to program
-		GLES20.glAttachShader(prog, fragmentShader); // add the fragment shader to program
-		GLES20.glLinkProgram(prog);				  // creates OpenGL program executables
+		int prog = GLES20.glCreateProgram();
+		GLES20.glAttachShader(prog, vertexShader);
+		GLES20.glAttachShader(prog, fragmentShader);
+		GLES20.glLinkProgram(prog);
 
 		return prog;
 	}
@@ -244,72 +252,65 @@ public class PlanetRenderer implements Renderer {
 	int loadTexture(final Context context, final int resourceId)
 	{
 		GLES20.glGenTextures(1, genbuf, 0);
-		if (genbuf[0] != 0)
-		{
-			final BitmapFactory.Options options = new BitmapFactory.Options();
-			options.inScaled = false;   // No pre-scaling
-			// Read in the resource
-			final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resourceId, options);
+        int tex = genbuf[0];
 
-			// Bind to the texture in OpenGL
-			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, genbuf[0]);
-			// Set filtering
+		if (tex != 0) {
+			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tex);
 			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
 			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-			GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT);
-			GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT);
 
-			// Load the bitmap into the bound texture.
+            final BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inScaled = false;
+            final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resourceId, options);
 			GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
-
-			// Recycle the bitmap, since its data has been loaded into OpenGL.
 			bitmap.recycle();
 		}
 
-		return genbuf[0];
+		return tex;
 	}
 
 	private void initPlanet()
 	{
         int texSize = 1024;
-        int width = texSize, height = texSize;
-		double d = texSize, r = d * 0.5;
-		double u, v;
-		long aa, uu, vv;
+		double r = texSize * 0.5;
+		int[] pixels = new int[texSize * texSize];
 
-		int[] pixels = new int[width * height];
-		for (int y = 0, idx = 0; y < height; y++) {
-			double sina = (y - r) / r;
-			double w = Math.sqrt(1 - sina*sina);
+		for (int row = 0, idx = 0; row < texSize; row++) {
+			double y = (r - row) / r;
+            double sin_theta = Math.sqrt(1 - y*y);
+			double theta = Math.acos(y);
+			long v = Math.round(4095 * theta / Math.PI);
+//			long v = Math.round(255 * theta / Math.PI);
 
-			v = (0.5 + Math.asin(sina) / Math.PI);
-			vv = Math.round(v * 4095);
+			for (int col = 0; col < texSize; col++) {
+				double x = (r - col) / r;
+                long u = 0, a = 0;
 
-			for (int x = 0; x < width; x++) {
-				double cosa = (x - r) / r;
+				if (x >= -sin_theta && x <= sin_theta) {
+                    double z = Math.sqrt(1 - y*y - x*x);
+                    double phi = Math.atan2(z, x) * 0.5;
+                    u = Math.round(4095 * phi / Math.PI);
+//                    u = Math.round(255 * phi / Math.PI);
+                    a = Math.round(255 * z);
+                }
 
-				if (cosa >= -w && cosa <= w) {
-					u = (1 - Math.acos(cosa / w) / Math.PI);
-					aa = Math.round(Math.sqrt(1 - sina*sina - cosa*cosa) * 255);
-				}
-				else {
-					u = 0;
-					aa = 0;
-				}
-				uu = Math.round(u * 4095);
-
-				pixels[idx++] = (int) ((aa << 24) + (uu << 12) + vv);
+				pixels[idx++] = (int) ((a << 24) + (v << 12) + u);
+//				pixels[idx++] = (int) ((a << 24) + (v << 8) + u);
 			}
 		}
 
 		GLES20.glGenTextures(1, genbuf, 0);
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, genbuf[0]);
-		GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-		GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
-		GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_NONE);
-		GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_NONE);
-		GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, IntBuffer.wrap(pixels));
-		offsetTex = genbuf[0];
+        offsetTex = genbuf[0];
+        if (offsetTex != 0) {
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, offsetTex);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_NONE);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_NONE);
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, texSize, texSize, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, IntBuffer.wrap(pixels));
+        }
 
 		planetTex = loadTexture(mContext, R.drawable.planet);
 	}
@@ -334,22 +335,22 @@ public class PlanetRenderer implements Renderer {
 	{
 		GLES20.glClearColor(0.25f, 0.25f, 0.25f, 1);
 
-		mQProgram = Compile(quadVS, quadFS);
-		maQPosition = GLES20.glGetAttribLocation(mQProgram, "vPosition");
-		maQTexCoord = GLES20.glGetAttribLocation(mQProgram, "vTexCoord0");
-		muQRatio = GLES20.glGetUniformLocation(mQProgram, "uRatio");
-		muQTexture0 = GLES20.glGetUniformLocation(mQProgram, "uTexture0");
-		muQTexture1 = GLES20.glGetUniformLocation(mQProgram, "uTexture1");
-		muQOffset = GLES20.glGetUniformLocation(mQProgram, "uOffset");
-		muQTilt = GLES20.glGetUniformLocation(mQProgram, "uTilt");
+		quadProgram = Compile(quadVS, quadFS);
+		qvPosition = GLES20.glGetAttribLocation(quadProgram, "vPosition");
+		qvTexCoord0 = GLES20.glGetAttribLocation(quadProgram, "vTexCoord0");
+		quRatio = GLES20.glGetUniformLocation(quadProgram, "uRatio");
+		quTexture0 = GLES20.glGetUniformLocation(quadProgram, "uTexture0");
+		quTexture1 = GLES20.glGetUniformLocation(quadProgram, "uTexture1");
+		quOffset = GLES20.glGetUniformLocation(quadProgram, "uOffset");
+		quTilt = GLES20.glGetUniformLocation(quadProgram, "uTilt");
 
-		final float quadv[] = {
-			-1,  1, 0, -1, -1,
-			-1, -1, 0, -1, 1,
-			 1,  1, 0, 1, -1,
+		final float quad[] = {
+			-1,  1, 0, 0, 0,
+			-1, -1, 0, 0, 1,
+			 1,  1, 0, 1, 0,
 			 1, -1, 0, 1, 1
 		};
 
-		glQuadVB = createBuffer(quadv);
+		quadVB = createBuffer(quad);
 	}
 }
