@@ -29,37 +29,37 @@ public class PlanetRenderer implements Renderer {
 		"}\n";
 /*
 	private final String quadFS =
-        "precision mediump float;\n" +
-        "uniform sampler2D uTexture0;\n" +
-        "uniform sampler2D uTexture1;\n" +
-        "uniform float uOffset;\n" +
-        "varying vec4 TexCoord0;\n" +
-        "void main() {\n" +
-        "	vec4 vTex = texture2D(uTexture0, TexCoord0.xy);\n" +
-        "	vTex.x += uOffset;\n" +
-        "	vec3 vCol = texture2D(uTexture1, vTex.xy).rgb;\n" +
-        "  	gl_FragColor = vec4(vCol * vTex.w, (vTex.w > 0.0 ? 1.0 : 0.0));\n" +
-        "}\n";
+		"precision mediump float;\n" +
+		"uniform sampler2D uTexture0;\n" +
+		"uniform sampler2D uTexture1;\n" +
+		"uniform float uOffset;\n" +
+		"varying vec4 TexCoord0;\n" +
+		"void main() {\n" +
+		"	vec4 vTex = texture2D(uTexture0, TexCoord0.xy);\n" +
+		"	vTex.x += uOffset;\n" +
+		"	vec3 vCol = texture2D(uTexture1, vTex.xy).rgb;\n" +
+		"  	gl_FragColor = vec4(vCol * vTex.w, (vTex.w > 0.0 ? 1.0 : 0.0));\n" +
+		"}\n";
 
 	private final String quadFS =
-        "precision mediump float;\n" +
-        "uniform sampler2D uTexture0;\n" +
-        "uniform sampler2D uTexture1;\n" +
-        "uniform float uOffset;\n" +
-        "varying vec4 TexCoord0;\n" +
-        "void main() {\n" +
-        "	vec4 vTex = texture2D(uTexture0, TexCoord0.xy);\n" +
+		"precision mediump float;\n" +
+		"uniform sampler2D uTexture0;\n" +
+		"uniform sampler2D uTexture1;\n" +
+		"uniform float uOffset;\n" +
+		"varying vec4 TexCoord0;\n" +
+		"void main() {\n" +
+		"	vec4 vTex = texture2D(uTexture0, TexCoord0.xy);\n" +
 
-        "	vec3 vOff = vTex.xyz * 255.0;\n" +
-        "	float hiY = floor(vOff.y / 16.0);\n" +
-        "	float loY = vOff.y - 16.0 * hiY;\n" +
-        "	vec2 vCoord = vec2(\n" +
-        "		(256.0 * loY + vOff.x) / 4095.0 + uOffset,\n" +
-        "		(vOff.z * 16.0 + hiY) / 4095.0);\n" +
+		"	vec3 vOff = vTex.xyz * 255.0;\n" +
+		"	float hiY = floor(vOff.y / 16.0);\n" +
+		"	float loY = vOff.y - 16.0 * hiY;\n" +
+		"	vec2 vCoord = vec2(\n" +
+		"		(256.0 * loY + vOff.x) / 4095.0 + uOffset,\n" +
+		"		(vOff.z * 16.0 + hiY) / 4095.0);\n" +
 
-        "	vec3 vCol = texture2D(uTexture1, vCoord).rgb;\n" +
-        "  	gl_FragColor = vec4(vCol * vTex.w, (vTex.w > 0.0 ? 1.0 : 0.0));\n" +
-        "}\n";
+		"	vec3 vCol = texture2D(uTexture1, vCoord).rgb;\n" +
+		"  	gl_FragColor = vec4(vCol * vTex.w, (vTex.w > 0.0 ? 1.0 : 0.0));\n" +
+		"}\n";
 */
 	private final String quadFS =
 		"precision mediump float;\n" +
@@ -91,7 +91,7 @@ public class PlanetRenderer implements Renderer {
 		"		if (z < 0.0) { vCoord.x = 1.0 - vCoord.x; }\n" +
 		"		vCoord.x += uOffset;\n" +
 
-        "		vec3 vCol = texture2D(uTexture1, vCoord).rgb;\n" +
+		"		vec3 vCol = texture2D(uTexture1, vCoord).rgb;\n" +
 		"   	gl_FragColor = vec4(vCol * sz, 1.0);\n" +
 		"	} else {\n" +
 		"   	gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);\n" +
@@ -114,7 +114,7 @@ public class PlanetRenderer implements Renderer {
 	private int planetTex;
 	private int offsetTex;
 
-    private final int[] genbuf = new int[1];
+	private final int[] genbuf = new int[1];
 
 	public float fps = 0;
 	private long start_frame;
@@ -150,8 +150,8 @@ public class PlanetRenderer implements Renderer {
 		}
 
 		if (prevTime < 0) prevTime = curTime;
-        double delta = (curTime - prevTime) / 1000.0f;
-        prevTime = curTime;
+		double delta = (curTime - prevTime) / 1000.0f;
+		prevTime = curTime;
 
 		rotateAngle += delta * rotateSpeed;
 		rotateAngle -= Math.floor(rotateAngle);
@@ -252,7 +252,7 @@ public class PlanetRenderer implements Renderer {
 	int loadTexture(final Context context, final int resourceId)
 	{
 		GLES20.glGenTextures(1, genbuf, 0);
-        int tex = genbuf[0];
+		int tex = genbuf[0];
 
 		if (tex != 0) {
 			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tex);
@@ -261,9 +261,9 @@ public class PlanetRenderer implements Renderer {
 			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT);
 			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT);
 
-            final BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inScaled = false;
-            final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resourceId, options);
+			final BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inScaled = false;
+			final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resourceId, options);
 			GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
 			bitmap.recycle();
 		}
@@ -273,28 +273,28 @@ public class PlanetRenderer implements Renderer {
 
 	private void initPlanet()
 	{
-        int texSize = 1024;
+		int texSize = 1024;
 		double r = texSize * 0.5;
 		int[] pixels = new int[texSize * texSize];
 
 		for (int row = 0, idx = 0; row < texSize; row++) {
 			double y = (r - row) / r;
-            double sin_theta = Math.sqrt(1 - y*y);
+			double sin_theta = Math.sqrt(1 - y*y);
 			double theta = Math.acos(y);
 			long v = Math.round(4095 * theta / Math.PI);
 //			long v = Math.round(255 * theta / Math.PI);
 
 			for (int col = 0; col < texSize; col++) {
 				double x = (r - col) / r;
-                long u = 0, a = 0;
+				long u = 0, a = 0;
 
 				if (x >= -sin_theta && x <= sin_theta) {
-                    double z = Math.sqrt(1 - y*y - x*x);
-                    double phi = Math.atan2(z, x) * 0.5;
-                    u = Math.round(4095 * phi / Math.PI);
-//                    u = Math.round(255 * phi / Math.PI);
-                    a = Math.round(255 * z);
-                }
+					double z = Math.sqrt(1 - y*y - x*x);
+					double phi = Math.atan2(z, x);
+					u = Math.round(4095 * phi / (2 * Math.PI));
+//					u = Math.round(255 * phi / (2 * Math.PI));
+					a = Math.round(255 * z);
+				}
 
 				pixels[idx++] = (int) ((a << 24) + (v << 12) + u);
 //				pixels[idx++] = (int) ((a << 24) + (v << 8) + u);
@@ -302,15 +302,15 @@ public class PlanetRenderer implements Renderer {
 		}
 
 		GLES20.glGenTextures(1, genbuf, 0);
-        offsetTex = genbuf[0];
-        if (offsetTex != 0) {
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, offsetTex);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_NONE);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_NONE);
-            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, texSize, texSize, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, IntBuffer.wrap(pixels));
-        }
+		offsetTex = genbuf[0];
+		if (offsetTex != 0) {
+			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, offsetTex);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_NONE);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_NONE);
+			GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, texSize, texSize, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, IntBuffer.wrap(pixels));
+		}
 
 		planetTex = loadTexture(mContext, R.drawable.planet);
 	}
