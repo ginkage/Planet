@@ -50,11 +50,11 @@ public class PlanetRenderer implements Renderer {
 		"void main() {\n" +
 		"	vec4 vTex = texture2D(uTexture0, TexCoord0.xy);\n" +
 
-		"	vec3 vOff = vTex.xyz * 255.0;\n" +
+		"	vec3 vOff = vTex.xyz * 255.0;\n" + // 256.0 for some devices
 		"	float hiY = floor(vOff.y / 16.0);\n" +
 		"	float loY = vOff.y - 16.0 * hiY;\n" +
 		"	vec2 vCoord = vec2(\n" +
-		"		(256.0 * loY + vOff.x) / 4095.0 + uOffset,\n" +
+		"		(vOff.x * 16.0 + loY) / 4095.0 + uOffset,\n" +
 		"		(vOff.z * 16.0 + hiY) / 4095.0);\n" +
 
 		"	vec3 vCol = texture2D(uTexture1, vCoord).rgb;\n" +
@@ -79,13 +79,11 @@ public class PlanetRenderer implements Renderer {
 		"		float z = (sy * uTilt.x + sz * uTilt.y);\n" +
 
 		"		vec4 vTex = texture2D(uTexture0, vec2(TexCoord0.x, y));\n" +
-		"		vec3 vOff = vTex.xyz * 255.0;\n" +
-
+		"		vec3 vOff = vTex.xyz * 255.0;\n" + // 256.0 for some devices
 		"		float hiY = floor(vOff.y / 16.0);\n" +
 		"		float loY = vOff.y - 16.0 * hiY;\n" +
-
 		"		vec2 vCoord = vec2(\n" +
-		"			(256.0 * loY + vOff.x) / 4095.0,\n" +
+		"			(vOff.x * 16.0 + loY) / 4095.0,\n" +
 		"			(vOff.z * 16.0 + hiY) / 4095.0);\n" +
 
 		"		if (z < 0.0) { vCoord.x = 1.0 - vCoord.x; }\n" +
@@ -127,7 +125,7 @@ public class PlanetRenderer implements Renderer {
 	public int screenHeight = 0;
 
 	public float scaleFactor = 1;
-	public double rotateSpeed = 0.125f;
+	public double rotateSpeed = -0.125f;
 	public double tiltSpeed = 0;
 
 	private final Context mContext;
@@ -296,7 +294,7 @@ public class PlanetRenderer implements Renderer {
 					a = Math.round(255 * z);
 				}
 
-				pixels[idx++] = (int) ((a << 24) + (v << 12) + u);
+				pixels[idx++] = (int) ((a << 24) + (v << 12) + ((u & 15) << 8) + (u >> 4));
 //				pixels[idx++] = (int) ((a << 24) + (v << 8) + u);
 			}
 		}

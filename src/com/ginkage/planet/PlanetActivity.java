@@ -71,6 +71,7 @@ class PlanetSurfaceView extends GLSurfaceView
 		super(context);
 
 		setEGLContextClientVersion(2);
+        setEGLConfigChooser(8, 8, 8, 8, 16, 0);
 
 		mRenderer = new PlanetRenderer(context);
 		setRenderer(mRenderer);
@@ -116,7 +117,7 @@ class PlanetSurfaceView extends GLSurfaceView
 		case MotionEvent.ACTION_UP:
 			velocityTracker.computeCurrentVelocity(1000);
 			mRenderer.rotateSpeed = -velocityTracker.getXVelocity() / (mRenderer.screenWidth * mRenderer.ratioX * mRenderer.scaleFactor * Math.PI);
-			mRenderer.tiltSpeed = velocityTracker.getYVelocity()  * 0.5f / (mRenderer.screenHeight * mRenderer.ratioY * mRenderer.scaleFactor);
+			mRenderer.tiltSpeed = velocityTracker.getYVelocity() * 0.5f / (mRenderer.screenHeight * mRenderer.ratioY * mRenderer.scaleFactor);
 			break;
 
 		case MotionEvent.ACTION_MOVE:
