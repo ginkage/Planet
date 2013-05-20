@@ -50,7 +50,7 @@ public class PlanetRenderer implements Renderer {
 		"void main() {\n" +
 		"	vec4 vTex = texture2D(uTexture0, TexCoord0.xy);\n" +
 
-		"	vec3 vOff = vTex.xyz * 255.0;\n" + // 256.0 for some devices
+		"	vec3 vOff = vTex.xyz * 255.0 + vec3(0.0, 0.5, 0.0);\n" +
 		"	float hiY = floor(vOff.y / 16.0);\n" +
 		"	float loY = vOff.y - 16.0 * hiY;\n" +
 		"	vec2 vCoord = vec2(\n" +
@@ -79,7 +79,7 @@ public class PlanetRenderer implements Renderer {
 		"		float z = (sy * uTilt.x + sz * uTilt.y);\n" +
 
 		"		vec4 vTex = texture2D(uTexture0, vec2(TexCoord0.x, y));\n" +
-		"		vec3 vOff = vTex.xyz * 255.0;\n" + // 256.0 for some devices
+		"		vec3 vOff = vTex.xyz * 255.0 + vec3(0.0, 0.5, 0.0);\n" +
 		"		float hiY = floor(vOff.y / 16.0);\n" +
 		"		float loY = vOff.y - 16.0 * hiY;\n" +
 		"		vec2 vCoord = vec2(\n" +

@@ -71,7 +71,7 @@ class PlanetSurfaceView extends GLSurfaceView
 		super(context);
 
 		setEGLContextClientVersion(2);
-        setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+		setEGLConfigChooser(8, 8, 8, 8, 16, 0);
 
 		mRenderer = new PlanetRenderer(context);
 		setRenderer(mRenderer);
