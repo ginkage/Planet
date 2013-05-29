@@ -43,26 +43,26 @@ public class PlanetRenderer implements Renderer {
 		"	float sy = 2.0 * TexCoord0.y - 1.0;\n" +
 		"	float z2 = 1.0 - sx * sx - sy * sy;\n" +
 
-		"	if (z2 > 0.0) {;\n" +
+		"	if (z2 > 0.0) {\n" +
 		"		float sz = sqrt(z2);\n" +
 		"		float y = (sz * uTilt.x - sy * uTilt.y);\n" +
 		"		float z = (sy * uTilt.x + sz * uTilt.y);\n" +
-		"		vec2 vCoord = vec2(0.0, 0.0);\n" +
+		"		vec2 vCoord;\n" +
 
 		"		if (abs(z) > abs(y)) {\n" +
 		"			vec4 vTex = texture2D(uTexture1, vec2(TexCoord0.x, (1.0 - y) * 0.5));\n" +
 		"			vec4 vOff = floor(vTex * 255.0 + 0.5);\n" +
 		"			vCoord = vec2(\n" +
-		"				(vOff.y * 256.0 + vOff.x) / 65535.0,\n" +
-		"				(vOff.w * 256.0 + vOff.z) / 65535.0);\n" +
+		"				(vOff.y * 256.0 + vOff.x) / 4095.0,\n" +
+		"				(vOff.w * 256.0 + vOff.z) / 4095.0);\n" +
 		"			if (z < 0.0) { vCoord.x = 1.0 - vCoord.x; }\n" +
 		"		}\n" +
 		"		else {\n" +
 		"			vec4 vTex = texture2D(uTexture2, vec2(TexCoord0.x, (1.0 + z) * 0.5));\n" +
 		"			vec4 vOff = floor(vTex * 255.0 + 0.5);\n" +
 		"			vCoord = vec2(\n" +
-		"				(vOff.y * 256.0 + vOff.x) / 65535.0,\n" +
-		"				(vOff.w * 256.0 + vOff.z) / 65535.0);\n" +
+		"				(vOff.y * 256.0 + vOff.x) / 4095.0,\n" +
+		"				(vOff.w * 256.0 + vOff.z) / 4095.0);\n" +
 		"			if (y < 0.0) { vCoord.y = 1.0 - vCoord.y; }\n" +
 		"		}\n" +
 
@@ -261,8 +261,8 @@ public class PlanetRenderer implements Renderer {
 			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tex);
 			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
 			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
-			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_NONE);
-			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_NONE);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
 			GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, texSize, texSize, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, IntBuffer.wrap(pixels));
 		}
 		return tex;
@@ -278,7 +278,7 @@ public class PlanetRenderer implements Renderer {
 			double y = (r - row) / r;
 			double sin_theta = Math.sqrt(1 - y*y);
 			double theta = Math.acos(y);
-			long v = Math.round(65535 * theta / Math.PI);
+			long v = Math.round(4095 * theta / Math.PI);
 
 			for (int col = 0; col < texSize; col++) {
 				double x = (r - col) / r;
@@ -287,7 +287,7 @@ public class PlanetRenderer implements Renderer {
 				if (x >= -sin_theta && x <= sin_theta) {
 					double z = Math.sqrt(1 - y*y - x*x);
 					double phi = Math.atan2(z, x);
-					u = Math.round(65535 * phi / (2 * Math.PI));
+					u = Math.round(4095 * phi / (2 * Math.PI));
 				}
 
 				pixels[idx++] = (int) ((v << 16) + u);
@@ -309,8 +309,9 @@ public class PlanetRenderer implements Renderer {
 					double phi = Math.atan2(z, x);
 					double theta = Math.acos(y);
 
-					u = Math.round(65535 * phi / (2 * Math.PI));
-					v = Math.round(65535 * theta / Math.PI);
+					if (phi < 0) phi += (2 * Math.PI);
+					u = Math.round(4095 * phi / (2 * Math.PI));
+					v = Math.round(4095 * theta / Math.PI);
 				}
 
 				pixels[idx++] = (int) ((v << 16) + u);
