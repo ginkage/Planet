@@ -23,51 +23,21 @@ public class PlanetRenderer implements Renderer {
 		"attribute vec4 vTexCoord0;\n" +
 		"uniform vec4 uRatio;\n" +
 		"varying vec4 TexCoord0;\n" +
+
 		"void main() {\n" +
 		"	gl_Position = vPosition * uRatio;\n" +
 		"	TexCoord0 = vTexCoord0;\n" +
 		"}\n";
-/*
-	private final String quadFS =
-		"precision mediump float;\n" +
-		"uniform sampler2D uTexture0;\n" +
-		"uniform sampler2D uTexture1;\n" +
-		"uniform float uOffset;\n" +
-		"varying vec4 TexCoord0;\n" +
-		"void main() {\n" +
-		"	vec4 vTex = texture2D(uTexture0, TexCoord0.xy);\n" +
-		"	vTex.x += uOffset;\n" +
-		"	vec3 vCol = texture2D(uTexture1, vTex.xy).rgb;\n" +
-		"  	gl_FragColor = vec4(vCol * vTex.w, (vTex.w > 0.0 ? 1.0 : 0.0));\n" +
-		"}\n";
 
 	private final String quadFS =
 		"precision mediump float;\n" +
 		"uniform sampler2D uTexture0;\n" +
 		"uniform sampler2D uTexture1;\n" +
-		"uniform float uOffset;\n" +
-		"varying vec4 TexCoord0;\n" +
-		"void main() {\n" +
-		"	vec4 vTex = texture2D(uTexture0, TexCoord0.xy);\n" +
-
-		"	vec3 vOff = vTex.xyz * 255.0 + vec3(0.5, 0.5, 0.5);\n" +
-		"	float hiY = floor(vOff.y / 16.0);\n" +
-		"	float loY = vOff.y - 16.0 * hiY;\n" +
-		"	vec2 vCoord = vec2(\n" +
-		"		(vOff.x * 16.0 + loY) / 4095.0 + uOffset,\n" +
-		"		(vOff.z * 16.0 + hiY) / 4095.0);\n" +
-
-		"	vec3 vCol = texture2D(uTexture1, vCoord).rgb;\n" +
-		"  	gl_FragColor = vec4(vCol * vTex.w, (vTex.w > 0.0 ? 1.0 : 0.0));\n" +
-		"}\n";
-*/
-	private final String quadFS =
-		"precision mediump float;\n" +
-		"uniform sampler2D uTexture0;\n" +
-		"uniform sampler2D uTexture1;\n" +
+		"uniform sampler2D uTexture2;\n" +
 		"uniform float uOffset;\n" +
 		"uniform vec2 uTilt;\n" +
 		"varying vec4 TexCoord0;\n" +
+
 		"void main() {\n" +
 		"	float sx = 2.0 * TexCoord0.x - 1.0;\n" +
 		"	float sy = 2.0 * TexCoord0.y - 1.0;\n" +
@@ -75,21 +45,30 @@ public class PlanetRenderer implements Renderer {
 
 		"	if (z2 > 0.0) {;\n" +
 		"		float sz = sqrt(z2);\n" +
-		"		float y = (sy * uTilt.y - sz * uTilt.x + 1.0) * 0.5;\n" +
+		"		float y = (sz * uTilt.x - sy * uTilt.y);\n" +
 		"		float z = (sy * uTilt.x + sz * uTilt.y);\n" +
+		"		vec2 vCoord = vec2(0.0, 0.0);\n" +
 
-		"		vec4 vTex = texture2D(uTexture0, vec2(TexCoord0.x, y));\n" +
-		"		vec3 vOff = vTex.xyz * 255.0 + vec3(0.5, 0.5, 0.5);\n" +
-		"		float hiY = floor(vOff.y / 16.0);\n" +
-		"		float loY = vOff.y - 16.0 * hiY;\n" +
-		"		vec2 vCoord = vec2(\n" +
-		"			(vOff.x * 16.0 + loY) / 4095.0,\n" +
-		"			(vOff.z * 16.0 + hiY) / 4095.0);\n" +
+		"		if (abs(z) > abs(y)) {\n" +
+		"			vec4 vTex = texture2D(uTexture1, vec2(TexCoord0.x, (1.0 - y) * 0.5));\n" +
+		"			vec4 vOff = floor(vTex * 255.0 + 0.5);\n" +
+		"			vCoord = vec2(\n" +
+		"				(vOff.y * 256.0 + vOff.x) / 65535.0,\n" +
+		"				(vOff.w * 256.0 + vOff.z) / 65535.0);\n" +
+		"			if (z < 0.0) { vCoord.x = 1.0 - vCoord.x; }\n" +
+		"		}\n" +
+		"		else {\n" +
+		"			vec4 vTex = texture2D(uTexture2, vec2(TexCoord0.x, (1.0 + z) * 0.5));\n" +
+		"			vec4 vOff = floor(vTex * 255.0 + 0.5);\n" +
+		"			vCoord = vec2(\n" +
+		"				(vOff.y * 256.0 + vOff.x) / 65535.0,\n" +
+		"				(vOff.w * 256.0 + vOff.z) / 65535.0);\n" +
+		"			if (y < 0.0) { vCoord.y = 1.0 - vCoord.y; }\n" +
+		"		}\n" +
 
-		"		if (z < 0.0) { vCoord.x = 1.0 - vCoord.x; }\n" +
 		"		vCoord.x += uOffset;\n" +
 
-		"		vec3 vCol = texture2D(uTexture1, vCoord).rgb;\n" +
+		"		vec3 vCol = texture2D(uTexture0, vCoord).rgb;\n" +
 		"   	gl_FragColor = vec4(vCol * sz, 1.0);\n" +
 		"	} else {\n" +
 		"   	gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);\n" +
@@ -102,6 +81,7 @@ public class PlanetRenderer implements Renderer {
 	private int quRatio;
 	private int quTexture0;
 	private int quTexture1;
+	private int quTexture2;
 	private int quOffset;
 	private int quTilt;
 
@@ -110,7 +90,8 @@ public class PlanetRenderer implements Renderer {
 	private int quadVB;
 
 	private int planetTex;
-	private int offsetTex;
+	private int offsetTex1;
+	private int offsetTex2;
 
 	private final int[] genbuf = new int[1];
 
@@ -164,9 +145,11 @@ public class PlanetRenderer implements Renderer {
 		GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, offsetTex);
-		GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, planetTex);
+		GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, offsetTex1);
+		GLES20.glActiveTexture(GLES20.GL_TEXTURE2);
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, offsetTex2);
 
 		GLES20.glUseProgram(quadProgram);
 		GLES20.glDisable(GLES20.GL_DEPTH_TEST);
@@ -180,6 +163,7 @@ public class PlanetRenderer implements Renderer {
 
 		GLES20.glUniform1i(quTexture0, 0);
 		GLES20.glUniform1i(quTexture1, 1);
+		GLES20.glUniform1i(quTexture2, 2);
 		GLES20.glUniform1f(quOffset, rotateAngle);
 		
 		double ta = tiltAngle * Math.PI;
@@ -269,6 +253,21 @@ public class PlanetRenderer implements Renderer {
 		return tex;
 	}
 
+	int arrayTexture(int texSize, int[] pixels)
+	{
+		GLES20.glGenTextures(1, genbuf, 0);
+		int tex = genbuf[0];
+		if (tex != 0) {
+			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tex);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_NONE);
+			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_NONE);
+			GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, texSize, texSize, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, IntBuffer.wrap(pixels));
+		}
+		return tex;
+	}
+
 	private void initPlanet()
 	{
 		int texSize = 1024;
@@ -279,36 +278,46 @@ public class PlanetRenderer implements Renderer {
 			double y = (r - row) / r;
 			double sin_theta = Math.sqrt(1 - y*y);
 			double theta = Math.acos(y);
-			long v = Math.round(4095 * theta / Math.PI);
-//			long v = Math.round(255 * theta / Math.PI);
+			long v = Math.round(65535 * theta / Math.PI);
 
 			for (int col = 0; col < texSize; col++) {
 				double x = (r - col) / r;
-				long u = 0, a = 0;
+				long u = 0;
 
 				if (x >= -sin_theta && x <= sin_theta) {
 					double z = Math.sqrt(1 - y*y - x*x);
 					double phi = Math.atan2(z, x);
-					u = Math.round(4095 * phi / (2 * Math.PI));
-//					u = Math.round(255 * phi / (2 * Math.PI));
-					a = Math.round(255 * z);
+					u = Math.round(65535 * phi / (2 * Math.PI));
 				}
 
-				pixels[idx++] = (int) ((a << 24) + (v << 12) + ((u & 15) << 8) + (u >> 4));
-//				pixels[idx++] = (int) ((a << 24) + (v << 8) + u);
+				pixels[idx++] = (int) ((v << 16) + u);
 			}
 		}
 
-		GLES20.glGenTextures(1, genbuf, 0);
-		offsetTex = genbuf[0];
-		if (offsetTex != 0) {
-			GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, offsetTex);
-			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
-			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_NONE);
-			GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_NONE);
-			GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, texSize, texSize, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, IntBuffer.wrap(pixels));
+		offsetTex1 = arrayTexture(texSize, pixels);
+
+		for (int row = 0, idx = 0; row < texSize; row++) {
+			double z = (row - r) / r;
+			double x_limit = Math.sqrt(1 - z*z);
+
+			for (int col = 0; col < texSize; col++) {
+				double x = (r - col) / r;
+				long u = 0, v = 0;
+
+				if (x >= -x_limit && x <= x_limit) {
+					double y = Math.sqrt(1 - z*z - x*x);
+					double phi = Math.atan2(z, x);
+					double theta = Math.acos(y);
+
+					u = Math.round(65535 * phi / (2 * Math.PI));
+					v = Math.round(65535 * theta / Math.PI);
+				}
+
+				pixels[idx++] = (int) ((v << 16) + u);
+			}
 		}
+
+		offsetTex2 = arrayTexture(texSize, pixels);
 
 		planetTex = loadTexture(mContext, R.drawable.planet);
 	}
@@ -339,6 +348,7 @@ public class PlanetRenderer implements Renderer {
 		quRatio = GLES20.glGetUniformLocation(quadProgram, "uRatio");
 		quTexture0 = GLES20.glGetUniformLocation(quadProgram, "uTexture0");
 		quTexture1 = GLES20.glGetUniformLocation(quadProgram, "uTexture1");
+		quTexture2 = GLES20.glGetUniformLocation(quadProgram, "uTexture2");
 		quOffset = GLES20.glGetUniformLocation(quadProgram, "uOffset");
 		quTilt = GLES20.glGetUniformLocation(quadProgram, "uTilt");
 
