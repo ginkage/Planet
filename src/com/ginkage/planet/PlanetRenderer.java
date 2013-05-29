@@ -20,13 +20,12 @@ public class PlanetRenderer implements Renderer {
 	private final String quadVS =
 	   	"precision mediump float;\n" +
 		"attribute vec4 vPosition;\n" +
-		"attribute vec4 vTexCoord0;\n" +
 		"uniform vec4 uRatio;\n" +
-		"varying vec4 TexCoord0;\n" +
+		"varying vec4 Position;\n" +
 
 		"void main() {\n" +
 		"	gl_Position = vPosition * uRatio;\n" +
-		"	TexCoord0 = vTexCoord0;\n" +
+		"	Position = vPosition;\n" +
 		"}\n";
 
 	private final String quadFS =
@@ -34,23 +33,23 @@ public class PlanetRenderer implements Renderer {
 		"uniform sampler2D uTexture0;\n" +
 		"uniform sampler2D uTexture1;\n" +
 		"uniform sampler2D uTexture2;\n" +
-		"uniform float uOffset;\n" +
-		"uniform vec2 uTilt;\n" +
-		"varying vec4 TexCoord0;\n" +
+		"uniform vec3 uRotate;\n" +
+		"varying vec4 Position;\n" +
 
 		"void main() {\n" +
-		"	float sx = 2.0 * TexCoord0.x - 1.0;\n" +
-		"	float sy = 2.0 * TexCoord0.y - 1.0;\n" +
+		"	float sx = Position.x;\n" +
+		"	float sy = -Position.y;\n" +
 		"	float z2 = 1.0 - sx * sx - sy * sy;\n" +
 
 		"	if (z2 > 0.0) {\n" +
 		"		float sz = sqrt(z2);\n" +
-		"		float y = (sz * uTilt.x - sy * uTilt.y);\n" +
-		"		float z = (sy * uTilt.x + sz * uTilt.y);\n" +
+		"		float tx = (1.0 + sx) * 0.5;\n" +
+		"		float y = (sz * uRotate.y - sy * uRotate.z);\n" +
+		"		float z = (sy * uRotate.y + sz * uRotate.z);\n" +
 		"		vec2 vCoord;\n" +
 
 		"		if (abs(z) > abs(y)) {\n" +
-		"			vec4 vTex = texture2D(uTexture1, vec2(TexCoord0.x, (1.0 - y) * 0.5));\n" +
+		"			vec4 vTex = texture2D(uTexture1, vec2(tx, (1.0 - y) * 0.5));\n" +
 		"			vec4 vOff = floor(vTex * 255.0 + 0.5);\n" +
 		"			vCoord = vec2(\n" +
 		"				(vOff.y * 256.0 + vOff.x) / 4095.0,\n" +
@@ -58,7 +57,7 @@ public class PlanetRenderer implements Renderer {
 		"			if (z < 0.0) { vCoord.x = 1.0 - vCoord.x; }\n" +
 		"		}\n" +
 		"		else {\n" +
-		"			vec4 vTex = texture2D(uTexture2, vec2(TexCoord0.x, (1.0 + z) * 0.5));\n" +
+		"			vec4 vTex = texture2D(uTexture2, vec2(tx, (1.0 + z) * 0.5));\n" +
 		"			vec4 vOff = floor(vTex * 255.0 + 0.5);\n" +
 		"			vCoord = vec2(\n" +
 		"				(vOff.y * 256.0 + vOff.x) / 4095.0,\n" +
@@ -66,7 +65,7 @@ public class PlanetRenderer implements Renderer {
 		"			if (y < 0.0) { vCoord.y = 1.0 - vCoord.y; }\n" +
 		"		}\n" +
 
-		"		vCoord.x += uOffset;\n" +
+		"		vCoord.x += uRotate.x;\n" +
 
 		"		vec3 vCol = texture2D(uTexture0, vCoord).rgb;\n" +
 		"   	gl_FragColor = vec4(vCol * sz, 1.0);\n" +
@@ -77,13 +76,11 @@ public class PlanetRenderer implements Renderer {
 
 	private int quadProgram;
 	private int qvPosition;
-	private int qvTexCoord0;
 	private int quRatio;
 	private int quTexture0;
 	private int quTexture1;
 	private int quTexture2;
-	private int quOffset;
-	private int quTilt;
+	private int quRotate;
 
 	float ratioX, ratioY;
 
@@ -156,18 +153,15 @@ public class PlanetRenderer implements Renderer {
 
 		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, quadVB);
 		GLES20.glEnableVertexAttribArray(qvPosition);
-		GLES20.glVertexAttribPointer(qvPosition, 3, GLES20.GL_FLOAT, false, 20, 0);
-		GLES20.glEnableVertexAttribArray(qvTexCoord0);
-		GLES20.glVertexAttribPointer(qvTexCoord0, 2, GLES20.GL_FLOAT, false, 20, 12);
+		GLES20.glVertexAttribPointer(qvPosition, 2, GLES20.GL_FLOAT, false, 8, 0);
 		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
 
 		GLES20.glUniform1i(quTexture0, 0);
 		GLES20.glUniform1i(quTexture1, 1);
 		GLES20.glUniform1i(quTexture2, 2);
-		GLES20.glUniform1f(quOffset, rotateAngle);
-		
+
 		double ta = tiltAngle * Math.PI;
-		GLES20.glUniform2f(quTilt, (float) Math.sin(ta), (float) Math.cos(ta));
+		GLES20.glUniform3f(quRotate, rotateAngle, (float) Math.sin(ta), (float) Math.cos(ta));
 
 		float minScale = 0.5f, maxScale = 2.0f / (ratioX < ratioY ? ratioX : ratioY);
 		if (scaleFactor < minScale) scaleFactor = minScale;
@@ -178,8 +172,6 @@ public class PlanetRenderer implements Renderer {
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
 		GLES20.glDisableVertexAttribArray(qvPosition);
-		GLES20.glDisableVertexAttribArray(qvTexCoord0);
-
 		GLES20.glDisable(GLES20.GL_BLEND);
 
 		frames_drawn++;
@@ -345,19 +337,17 @@ public class PlanetRenderer implements Renderer {
 
 		quadProgram = Compile(quadVS, quadFS);
 		qvPosition = GLES20.glGetAttribLocation(quadProgram, "vPosition");
-		qvTexCoord0 = GLES20.glGetAttribLocation(quadProgram, "vTexCoord0");
 		quRatio = GLES20.glGetUniformLocation(quadProgram, "uRatio");
 		quTexture0 = GLES20.glGetUniformLocation(quadProgram, "uTexture0");
 		quTexture1 = GLES20.glGetUniformLocation(quadProgram, "uTexture1");
 		quTexture2 = GLES20.glGetUniformLocation(quadProgram, "uTexture2");
-		quOffset = GLES20.glGetUniformLocation(quadProgram, "uOffset");
-		quTilt = GLES20.glGetUniformLocation(quadProgram, "uTilt");
+		quRotate = GLES20.glGetUniformLocation(quadProgram, "uRotate");
 
 		final float quad[] = {
-			-1,  1, 0, 0, 0,
-			-1, -1, 0, 0, 1,
-			 1,  1, 0, 1, 0,
-			 1, -1, 0, 1, 1
+			-1,  1,
+			-1, -1,
+			 1,  1,
+			 1, -1,
 		};
 
 		quadVB = createBuffer(quad);
