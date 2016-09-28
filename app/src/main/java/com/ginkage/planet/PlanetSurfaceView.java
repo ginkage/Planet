@@ -1,61 +1,10 @@
 package com.ginkage.planet;
 
-import android.app.Activity;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
-import android.os.Bundle;
-import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
 import android.view.VelocityTracker;
-
-public class PlanetActivity extends Activity
-{
-	private PlanetSurfaceView mGLView = null;
-	private final Handler mHandler = new Handler();
-
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-		mGLView = new PlanetSurfaceView(this);
-		setContentView(mGLView);
-
-		mHandler.removeCallbacks(mUpdateTimeTask);
-		mHandler.postDelayed(mUpdateTimeTask, 1000);
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		if (mGLView != null)
-			mGLView.onPause();
-		mHandler.removeCallbacks(mUpdateTimeTask);
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		if (mGLView != null)
-			mGLView.onResume();
-		mHandler.removeCallbacks(mUpdateTimeTask);
-		mHandler.postDelayed(mUpdateTimeTask, 1000);
-	}
-
-	private final Runnable mUpdateTimeTask = new Runnable() {
-		public void run() {
-			if (mGLView != null) {
-				if (mGLView.mRenderer != null) {
-					float fps = mGLView.mRenderer.fps;
-					setTitle(String.format("%.1f FPS", fps));
-				}
-			}
-
-			mHandler.postDelayed(this, 1000);
-		}
-	};
-}
 
 class PlanetSurfaceView extends GLSurfaceView
 {
@@ -80,7 +29,7 @@ class PlanetSurfaceView extends GLSurfaceView
 		velocityTracker = VelocityTracker.obtain();
 	}
 
-	private class MyGestureListener extends SimpleOnScaleGestureListener
+	private class MyGestureListener extends ScaleGestureDetector.SimpleOnScaleGestureListener
 	{
 		@Override
 		public boolean onScale(ScaleGestureDetector detector) {
@@ -99,7 +48,7 @@ class PlanetSurfaceView extends GLSurfaceView
 		}
 	}
 
-	@Override 
+	@Override
 	public boolean onTouchEvent(MotionEvent e)
 	{
 		velocityTracker.addMovement(e);
@@ -134,5 +83,5 @@ class PlanetSurfaceView extends GLSurfaceView
 		mPreviousY = y;
 
 		return scaleDetector.onTouchEvent(e);
-	} 
+	}
 }
