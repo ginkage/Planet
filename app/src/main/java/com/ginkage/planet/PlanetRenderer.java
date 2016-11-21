@@ -16,7 +16,7 @@ import java.nio.FloatBuffer;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class PlanetRenderer implements Renderer {
+class PlanetRenderer implements Renderer {
 	private static final String quadVS =
 		"precision mediump float;\n" +
 		"attribute vec4 vPosition;\n" +
@@ -103,23 +103,23 @@ public class PlanetRenderer implements Renderer {
 
 	private final int[] genbuf = new int[1];
 
-	public float fps = 0;
+	float fps = 0;
 	private long start_frame;
 	private long frames_drawn;
 
 	private long prevTime = -1;
-	public float rotateAngle = 0;
-	public float tiltAngle = 0;
-	public int screenWidth = 0;
-	public int screenHeight = 0;
+	float rotateAngle = 0;
+	float tiltAngle = 0;
+	int screenWidth = 0;
+	int screenHeight = 0;
 
-	public float scaleFactor = 1;
-	public double rotateSpeed = -0.125f;
-	public double tiltSpeed = 0;
+	float scaleFactor = 1;
+	double rotateSpeed = -0.125f;
+	double tiltSpeed = 0;
 
 	private final Context mContext;
 
-	public PlanetRenderer(Context context)
+	PlanetRenderer(Context context)
 	{
 		super();
 		mContext = context;
@@ -237,7 +237,7 @@ public class PlanetRenderer implements Renderer {
 		return prog;
 	}
 
-	int loadTexture(final Context context, final int resourceId)
+	private int loadTexture(final Context context, final int resourceId)
 	{
 		GLES20.glGenTextures(1, genbuf, 0);
 		int tex = genbuf[0];
@@ -259,7 +259,7 @@ public class PlanetRenderer implements Renderer {
 		return tex;
 	}
 
-	int arrayTexture(int texSize, byte[] pixels)
+	private int arrayTexture(int texSize, byte[] pixels)
 	{
 		GLES20.glGenTextures(1, genbuf, 0);
 		int tex = genbuf[0];
