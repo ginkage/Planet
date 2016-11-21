@@ -25,18 +25,18 @@ rs_allocation gPlanet;
 rs_allocation gNormalMap;
 
 /*
-RenderScript kernel that performs saturation manipulation.
+    RenderScript kernel that performs saturation manipulation.
 */
-uchar4 RS_KERNEL saturation(uchar4 in, uint32_t x, uint32_t y)
+uchar4 RS_KERNEL rotation(uchar4 in, uint32_t x, uint32_t y)
 {
 	float sx = x / 512.0 - 1;
-	float sy = y / 512.0 - 1;
+	float sy = 1 - y / 512.0;
 	float z2 = 1.0 - sx * sx - sy * sy;
 	float4 result = { 0, 0, 0, 1 };
 
 	if (z2 > 0.0) {
 		float sz = sqrt(z2);
-		float y = -sy;
+		float y = sy;
 		float z = sz;
 		float2 vCoord = { 0, 0 };
 
@@ -56,12 +56,18 @@ uchar4 RS_KERNEL saturation(uchar4 in, uint32_t x, uint32_t y)
 
 		float3 vCol = rsSample(gPlanet, gLinear, vCoord).xyz;
 		float3 vNorm = normalize(rsSample(gNormalMap, gLinear, vCoord).xyz - 0.5);
-		float sin_theta = sy;
+		float sin_theta = -sy;
 		float cos_theta = sqrt((float)(1.0 - sy * sy));
 		float sin_phi = sx / cos_theta;
 		float cos_phi = sz / cos_theta;
-		float light = (vNorm.z * cos_theta - vNorm.y * sin_theta) * cos_phi - vNorm.x * sin_phi;
-        result.xyz = vCol * light;
+
+		float3 vRot = {
+		    vNorm.x * cos_phi + (-vNorm.y * sin_theta + vNorm.z * cos_theta) * sin_phi,
+		    -vNorm.y * cos_theta - vNorm.z * sin_theta,
+		    -vNorm.x * sin_phi + (-vNorm.y * sin_theta + vNorm.z * cos_theta) * cos_phi
+		};
+
+        result.xyz = vRot.z * vCol;
 	}
 
     return rsPackColorTo8888(result);

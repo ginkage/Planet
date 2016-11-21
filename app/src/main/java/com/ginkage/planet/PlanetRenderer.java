@@ -38,13 +38,13 @@ class PlanetRenderer implements Renderer {
 
 		"void main() {\n" +
 		"	float sx = Position.x * 1.1;\n" +
-		"	float sy = -Position.y * 1.1;\n" +
+		"	float sy = Position.y * 1.1;\n" +
 		"	float z2 = 1.0 - sx * sx - sy * sy;\n" +
 
 		"	if (z2 > 0.0) {\n" +
 		"		float sz = sqrt(z2);\n" +
-		"		float y = (sz * uRotate.y - sy * uRotate.z);\n" +
-		"		float z = (sy * uRotate.y + sz * uRotate.z);\n" +
+		"		float y = (sz * uRotate.y + sy * uRotate.z);\n" +
+		"		float z = (-sy * uRotate.y + sz * uRotate.z);\n" +
 		"		vec2 vCoord = vec2(0.0, 0.0);\n" +
 
 		"		if (abs(z) > abs(y)) {\n" +
@@ -64,15 +64,15 @@ class PlanetRenderer implements Renderer {
 		"		vec3 vCol = texture2D(uTexture0, vCoord).rgb;\n" +
 		"		vec3 vNorm = normalize(texture2D(uTexture1, vCoord).rgb - 0.5);\n" +
 
-		"		float sin_theta = sy;\n" +
+		"		float sin_theta = -sy;\n" +
 		"		float cos_theta = sqrt(1.0 - sy * sy);\n" +
 		"		float sin_phi = sx / cos_theta;\n" +
 		"		float cos_phi = sz / cos_theta;\n" +
 		"		float light = (vNorm.z * cos_theta - vNorm.y * sin_theta) * cos_phi - vNorm.x * sin_phi;\n" +
 
-		"   	gl_FragColor = vec4(vCol * light, 1.0);\n" +
+		"		gl_FragColor = vec4(vCol * light, 1.0);\n" +
 		"	} else {\n" +
-		"   	gl_FragColor = vec4(0.25, 0.5, 1.0, (z2 + 0.21) * 1.5);\n" +
+		"		gl_FragColor = vec4(0.25, 0.5, 1.0, (z2 + 0.21) * 1.5);\n" +
 		"	}\n" +
 		"}\n";
 

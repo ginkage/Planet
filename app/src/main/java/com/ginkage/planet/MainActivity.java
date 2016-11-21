@@ -38,7 +38,7 @@ public class MainActivity extends Activity {
 
     private RenderScript mRS;
     private Allocation[] mOutAllocations;
-    private ScriptC_saturation mScript;
+    private ScriptC_rotation mScript;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,7 +104,7 @@ public class MainActivity extends Activity {
         }
 
         //Load script
-        mScript = new ScriptC_saturation(mRS);
+        mScript = new ScriptC_rotation(mRS);
         mScript.set_gLinear(Sampler.WRAP_LINEAR(mRS));
         mScript.set_gPlanet(Allocation.createFromBitmap(mRS, loadBitmap(R.drawable.planet)));
         mScript.set_gNormalMap(Allocation.createFromBitmap(mRS, loadBitmap(R.drawable.normalmap)));
@@ -132,7 +132,7 @@ public class MainActivity extends Activity {
                 /*
                  * Invoke saturation filter kernel
                  */
-                mScript.forEach_saturation(mOutAllocations[index], mOutAllocations[index]);
+                mScript.forEach_rotation(mOutAllocations[index], mOutAllocations[index]);
 
                 /*
                  * Copy to bitmap and invalidate image view
