@@ -52,7 +52,7 @@ uchar4 RS_KERNEL rotation(uchar4 in, uint32_t x, uint32_t y)
 		};
 
 		norm.xyz = (vRot + 1.0) * 0.5;
-        rsSetElementAt_uchar4(gNormal, rsPackColorTo8888(norm), x, y);
+		rsSetElementAt_uchar4(gNormal, rsPackColorTo8888(norm), x, y);
 	}
 
 	return rsPackColorTo8888(result);
@@ -65,7 +65,7 @@ uchar4 RS_KERNEL lighting(uchar4 in, uint32_t x, uint32_t y)
 	float4 result = { 0, 0, 0, 0 };
 
 	if (sx * sx + sy * sy < 1.0) {
-    	uchar4 in2 = rsGetElementAt_uchar4(gNormal, x, y);
+		uchar4 in2 = rsGetElementAt_uchar4(gNormal, x, y);
 		float3 vNorm = 2.0 * rsUnpackColor8888(in2).xyz - 1.0;
 		float3 vCol = rsUnpackColor8888(in).xyz;
 		float light = -vNorm.x * sin(lightY) + vNorm.z * cos(lightY);
