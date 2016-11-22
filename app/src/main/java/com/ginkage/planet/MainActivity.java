@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2014 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.ginkage.planet;
 
 import android.app.Activity;
@@ -27,17 +11,20 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
 public class MainActivity extends Activity {
-    /* Number of bitmaps that is used for renderScript thread and UI thread synchronization.
-       Ideally, this can be reduced to 2, however in some devices, 2 buffers still showing tierings on UI.
-       Investigating a root cause.
-     */
-    private final int NUM_BITMAPS = 3;
-    private int mCurrentBitmap = 0;
-    private Bitmap[] mBitmapsOut;
+
+    private Bitmap mBitmapPlanet;
+    private Bitmap mBitmapNormal;
+    private Bitmap mBitmapLight;
     private ImageView mImageView;
 
+    private float mRotation = 0.25f;
+    private float mLight = 1.0f;
+    private RenderScriptTask mCurrentTask = null;
+
     private RenderScript mRS;
-    private Allocation[] mOutAllocations;
+    private Allocation mAllocPlanet;
+    private Allocation mAllocNormal;
+    private Allocation mAllocLight;
     private ScriptC_rotation mScript;
 
     @Override
@@ -46,139 +33,112 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.main_layout);
 
-        /*
-         * Initialize UI
-         */
-        mBitmapsOut = new Bitmap[NUM_BITMAPS];
-        for (int i = 0; i < NUM_BITMAPS; ++i) {
-            mBitmapsOut[i] = Bitmap.createBitmap(1024, 1024, Bitmap.Config.ARGB_8888);
-        }
+        mBitmapPlanet = Bitmap.createBitmap(1024, 1024, Bitmap.Config.ARGB_8888);
+        mBitmapNormal = Bitmap.createBitmap(1024, 1024, Bitmap.Config.ARGB_8888);
+        mBitmapLight =  Bitmap.createBitmap(1024, 1024, Bitmap.Config.ARGB_8888);
 
         mImageView = (ImageView) findViewById(R.id.imageView);
-        mImageView.setImageBitmap(mBitmapsOut[mCurrentBitmap]);
-        mCurrentBitmap += (mCurrentBitmap + 1) % NUM_BITMAPS;
+        mImageView.setImageBitmap(mBitmapLight);
 
-        SeekBar seekbar = (SeekBar) findViewById(R.id.seekBar1);
-        seekbar.setMax(360);
-        seekbar.setProgress(180);
-        seekbar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+        SeekBar rotate = (SeekBar) findViewById(R.id.seekBarRotate);
+        rotate.setMax(360);
+        rotate.setProgress(90);
+
+        SeekBar light = (SeekBar) findViewById(R.id.seekBarLight);
+        light.setMax(360);
+        light.setProgress(180);
+
+        rotate.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                float max = 2.0f;
-                float min = 0.0f;
-                float f = (float) ((max - min) * (progress / 360.0) + min);
-                updateImage(f);
+                float min = 0.0f, max = 1.0f;
+                mRotation = (float) ((max - min) * (progress / 360.0) + min);
+                updateImage(true);
             }
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
-        /*
-         * Create renderScript
-         */
-        createScript();
+        light.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                float min = 0.0f, max = 2.0f;
+                mLight = (float) ((max - min) * (progress / 360.0) + min);
+                updateImage(false);
+            }
 
-        /*
-         * Invoke renderScript kernel and update imageView
-         */
-        updateImage(1.0f);
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        createScript();
+        updateImage(true);
     }
 
-    /*
-     * Initialize RenderScript
-     * In the sample, it creates RenderScript kernel that performs saturation manipulation.
-     */
     private void createScript() {
-        //Initialize RS
         mRS = RenderScript.create(this);
 
-        //Allocate buffers
-        mOutAllocations = new Allocation[NUM_BITMAPS];
-        for (int i = 0; i < NUM_BITMAPS; ++i) {
-            mOutAllocations[i] = Allocation.createFromBitmap(mRS, mBitmapsOut[i]);
-        }
+        mAllocPlanet = Allocation.createFromBitmap(mRS, mBitmapPlanet);
+        mAllocNormal = Allocation.createFromBitmap(mRS, mBitmapNormal);
+        mAllocLight = Allocation.createFromBitmap(mRS, mBitmapLight);
 
-        //Load script
         mScript = new ScriptC_rotation(mRS);
         mScript.set_gLinear(Sampler.WRAP_LINEAR(mRS));
-        mScript.set_gPlanet(Allocation.createFromBitmap(mRS, loadBitmap(R.drawable.moon)));
+        mScript.set_gPlanetMap(Allocation.createFromBitmap(mRS, loadBitmap(R.drawable.moon)));
         mScript.set_gNormalMap(Allocation.createFromBitmap(mRS, loadBitmap(R.drawable.moon_normal)));
+        mScript.set_gPlanet(mAllocPlanet);
+        mScript.set_gNormal(mAllocNormal);
     }
 
-    /*
-     * In the AsyncTask, it invokes RenderScript intrinsics to do a filtering.
-     * After the filtering is done, an operation blocks at Application.copyTo() in AsyncTask thread.
-     * Once all operation is finished at onPostExecute() in UI thread, it can invalidate and update ImageView UI.
-     */
-    private class RenderScriptTask extends AsyncTask<Float, Integer, Integer> {
+    private class RenderScriptTask extends AsyncTask<Boolean, Void, Bitmap> {
         Boolean issued = false;
 
-        protected Integer doInBackground(Float... values) {
-            int index = -1;
-            if (!isCancelled()) {
-                issued = true;
-                index = mCurrentBitmap;
-
-                /*
-                 * Set global variable in RS
-                 */
-                mScript.set_rotateX(1 - values[0]);
-
-                /*
-                 * Invoke saturation filter kernel
-                 */
-                mScript.forEach_rotation(mOutAllocations[index], mOutAllocations[index]);
-
-                /*
-                 * Copy to bitmap and invalidate image view
-                 */
-                mOutAllocations[index].copyTo(mBitmapsOut[index]);
-                mCurrentBitmap = (mCurrentBitmap + 1) % NUM_BITMAPS;
+        protected Bitmap doInBackground(Boolean... values) {
+            if (isCancelled()) {
+                return null;
             }
-            return index;
+
+            issued = true;
+
+            if (values[0]) {
+                mScript.set_rotateY(1 - mRotation);
+                mScript.forEach_rotation(mAllocPlanet, mAllocPlanet);
+                mAllocPlanet.copyTo(mBitmapPlanet);
+                mAllocNormal.copyTo(mBitmapNormal);
+            }
+
+            mScript.set_lightY((float)(Math.PI * (1 - mLight)));
+            mScript.forEach_lighting(mAllocPlanet, mAllocLight);
+            mAllocLight.copyTo(mBitmapLight);
+
+            return mBitmapLight;
         }
 
-        void updateView(Integer result) {
-            if (result != -1) {
-                // Request UI update
-                mImageView.setImageBitmap(mBitmapsOut[result]);
+        void updateView(Bitmap result) {
+            if (result != null) {
+                mImageView.setImageBitmap(result);
                 mImageView.invalidate();
             }
         }
 
-        protected void onPostExecute(Integer result) {
+        protected void onPostExecute(Bitmap result) {
             updateView(result);
         }
 
-        protected void onCancelled(Integer result) {
+        protected void onCancelled(Bitmap result) {
             if (issued) {
                 updateView(result);
             }
         }
     }
 
-    RenderScriptTask currentTask = null;
-
-    /*
-    Invoke AsynchTask and cancel previous task.
-    When AsyncTasks are piled up (typically in slow device with heavy kernel),
-    Only the latest (and already started) task invokes RenderScript operation.
-     */
-    private void updateImage(final float f) {
-        if (currentTask != null)
-            currentTask.cancel(false);
-        currentTask = new RenderScriptTask();
-        currentTask.execute(f);
+    private void updateImage(boolean rotate) {
+        if (mCurrentTask != null) {
+            mCurrentTask.cancel(false);
+        }
+        mCurrentTask = new RenderScriptTask();
+        mCurrentTask.execute(rotate);
     }
 
-    /*
-    Helper to load Bitmap from resource
-     */
     private Bitmap loadBitmap(int resource) {
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;

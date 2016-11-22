@@ -43,8 +43,8 @@ class PlanetRenderer implements Renderer {
 
 		"	if (z2 > 0.0) {\n" +
 		"		float sz = sqrt(z2);\n" +
-		"		float y = (sz * uRotate.y + sy * uRotate.z);\n" +
-		"		float z = (-sy * uRotate.y + sz * uRotate.z);\n" +
+		"		float y = sz * uRotate.y + sy * uRotate.z;\n" +
+		"		float z = -sy * uRotate.y + sz * uRotate.z;\n" +
 		"		vec2 vCoord = vec2(0.0, 0.0);\n" +
 
 		"		if (abs(z) > abs(y)) {\n" +
