@@ -59,13 +59,13 @@ public class MainActivity extends Activity {
         mCurrentBitmap += (mCurrentBitmap + 1) % NUM_BITMAPS;
 
         SeekBar seekbar = (SeekBar) findViewById(R.id.seekBar1);
-        seekbar.setProgress(50);
+        seekbar.setMax(360);
+        seekbar.setProgress(180);
         seekbar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
-            public void onProgressChanged(SeekBar seekBar, int progress,
-                                          boolean fromUser) {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 float max = 2.0f;
                 float min = 0.0f;
-                float f = (float) ((max - min) * (progress / 100.0) + min);
+                float f = (float) ((max - min) * (progress / 360.0) + min);
                 updateImage(f);
             }
 
@@ -106,8 +106,8 @@ public class MainActivity extends Activity {
         //Load script
         mScript = new ScriptC_rotation(mRS);
         mScript.set_gLinear(Sampler.WRAP_LINEAR(mRS));
-        mScript.set_gPlanet(Allocation.createFromBitmap(mRS, loadBitmap(R.drawable.planet)));
-        mScript.set_gNormalMap(Allocation.createFromBitmap(mRS, loadBitmap(R.drawable.normalmap)));
+        mScript.set_gPlanet(Allocation.createFromBitmap(mRS, loadBitmap(R.drawable.moon)));
+        mScript.set_gNormalMap(Allocation.createFromBitmap(mRS, loadBitmap(R.drawable.moon_normal)));
     }
 
     /*
@@ -127,7 +127,7 @@ public class MainActivity extends Activity {
                 /*
                  * Set global variable in RS
                  */
-                mScript.set_rotateX(values[0]);
+                mScript.set_rotateX(1 - values[0]);
 
                 /*
                  * Invoke saturation filter kernel
