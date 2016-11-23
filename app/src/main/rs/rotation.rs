@@ -62,9 +62,13 @@ uchar4 RS_KERNEL lighting(uchar4 in, uint32_t x, uint32_t y)
 {
 	float sx = x / 512.0 - 1;
 	float sy = 1 - y / 512.0;
+	float z2 = 1.0 - sx * sx - sy * sy;
 	float4 result = { 0, 0, 0, 0 };
 
-	if (sx * sx + sy * sy < 1.0) {
+	if (z2 > 0.0) {
+		// Replace the following two lines with
+		// float3 vNorm = { sx, sy, sqrt(z2) };
+		// to disable bump-mapping and speed-up more.
 		uchar4 in2 = rsGetElementAt_uchar4(gNormal, x, y);
 		float3 vNorm = 2.0 * rsUnpackColor8888(in2).xyz - 1.0;
 		float3 vCol = rsUnpackColor8888(in).xyz;
