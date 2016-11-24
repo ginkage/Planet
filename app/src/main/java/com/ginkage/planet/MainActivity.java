@@ -3,9 +3,12 @@ package com.ginkage.planet;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v8.renderscript.*;
+import android.support.v8.renderscript.Allocation;
+import android.support.v8.renderscript.RenderScript;
+import android.support.v8.renderscript.Sampler;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -19,6 +22,7 @@ public class MainActivity extends Activity {
 
     private float mRotation = 0.25f;
     private float mLight = 1.0f;
+    private int mTexSize = 1024;
     private RenderScriptTask mCurrentTask = null;
 
     private RenderScript mRS;
@@ -33,9 +37,13 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.main_layout);
 
-        mBitmapPlanet = Bitmap.createBitmap(1024, 1024, Bitmap.Config.ARGB_8888);
-        mBitmapNormal = Bitmap.createBitmap(1024, 1024, Bitmap.Config.ARGB_8888);
-        mBitmapLight =  Bitmap.createBitmap(1024, 1024, Bitmap.Config.ARGB_8888);
+        Point size = new Point();
+        getWindowManager().getDefaultDisplay().getSize(size);
+        mTexSize = Math.min(Math.min(mTexSize, size.x), size.y);
+
+        mBitmapPlanet = Bitmap.createBitmap(mTexSize, mTexSize, Bitmap.Config.ARGB_8888);
+        mBitmapNormal = Bitmap.createBitmap(mTexSize, mTexSize, Bitmap.Config.ARGB_8888);
+        mBitmapLight =  Bitmap.createBitmap(mTexSize, mTexSize, Bitmap.Config.ARGB_8888);
 
         mImageView = (ImageView) findViewById(R.id.imageView);
         mImageView.setImageBitmap(mBitmapLight);
@@ -87,6 +95,7 @@ public class MainActivity extends Activity {
         mScript.set_gNormalMap(Allocation.createFromBitmap(mRS, loadBitmap(R.drawable.moon_normal)));
         mScript.set_gPlanet(mAllocPlanet);
         mScript.set_gNormal(mAllocNormal);
+        mScript.set_gTexSize(mTexSize);
     }
 
     private class RenderScriptTask extends AsyncTask<Boolean, Void, Bitmap> {

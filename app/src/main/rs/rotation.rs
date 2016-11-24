@@ -5,6 +5,8 @@
 float rotateY = 0.f;
 float lightY = 0.f;
 
+int gTexSize;
+
 rs_sampler gLinear;
 rs_allocation gPlanetMap;
 rs_allocation gNormalMap;
@@ -13,8 +15,8 @@ rs_allocation gNormal;
 
 uchar4 RS_KERNEL rotation(uchar4 in, uint32_t x, uint32_t y)
 {
-	float sx = x / 512.0 - 1;
-	float sy = 1 - y / 512.0;
+	float sx = x * 2.0 / gTexSize - 1;
+	float sy = 1 - y * 2.0 / gTexSize;
 	float z2 = 1.0 - sx * sx - sy * sy;
 	float4 result = { 0, 0, 0, 0 };
 
@@ -60,8 +62,8 @@ uchar4 RS_KERNEL rotation(uchar4 in, uint32_t x, uint32_t y)
 
 uchar4 RS_KERNEL lighting(uchar4 in, uint32_t x, uint32_t y)
 {
-	float sx = x / 512.0 - 1;
-	float sy = 1 - y / 512.0;
+	float sx = x * 2.0 / gTexSize - 1;
+	float sy = 1 - y * 2.0 / gTexSize;
 	float z2 = 1.0 - sx * sx - sy * sy;
 	float4 result = { 0, 0, 0, 0 };
 
