@@ -45,14 +45,14 @@ public class MainActivity extends Activity {
         mBitmapNormal = Bitmap.createBitmap(mTexSize, mTexSize, Bitmap.Config.ARGB_8888);
         mBitmapLight =  Bitmap.createBitmap(mTexSize, mTexSize, Bitmap.Config.ARGB_8888);
 
-        mImageView = (ImageView) findViewById(R.id.imageView);
+        mImageView = findViewById(R.id.imageView);
         mImageView.setImageBitmap(mBitmapLight);
 
-        SeekBar rotate = (SeekBar) findViewById(R.id.seekBarRotate);
+        SeekBar rotate = findViewById(R.id.seekBarRotate);
         rotate.setMax(360);
         rotate.setProgress(90);
 
-        SeekBar light = (SeekBar) findViewById(R.id.seekBarLight);
+        SeekBar light = findViewById(R.id.seekBarLight);
         light.setMax(360);
         light.setProgress(180);
 
