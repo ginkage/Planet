@@ -1,6 +1,9 @@
 <manifest package="com.ginkage.planet"
           xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature android:glEsVersion="0x00020000" android:required="true"/>
     <uses-feature android:name="android.hardware.type.watch"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
