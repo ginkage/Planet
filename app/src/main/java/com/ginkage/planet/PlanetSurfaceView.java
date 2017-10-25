@@ -18,6 +18,7 @@ class PlanetSurfaceView extends GLSurfaceView
 	public PlanetSurfaceView(Context context)
 	{
 		super(context);
+		setKeepScreenOn(true);
 
 		setEGLContextClientVersion(2);
 		setEGLConfigChooser(8, 8, 8, 8, 16, 0);
